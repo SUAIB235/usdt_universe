@@ -19,7 +19,6 @@ export default function AdminRoute({ children }) {
     );
   }
 
-  // ❌ Not logged in
   if (!user) return <Navigate to="/" replace />;
 
   // 🚫 Not admin
