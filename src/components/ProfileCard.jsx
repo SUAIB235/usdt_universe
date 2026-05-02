@@ -1,343 +1,180 @@
-import { useEffect, useRef, useState } from "react";
-import { db } from "./firebase";
-import {
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  increment,
-} from "firebase/firestore";
-import toast, { Toaster } from "react-hot-toast";
-import { FaSearch } from "react-icons/fa";
-import { BsActivity } from "react-icons/bs";
+import { RiUserFollowFill } from "react-icons/ri";
+import { useAuth } from "../context/AuthContext";
+import { IoMdCheckmark } from "react-icons/io";
+import { FcDoughnutChart, FcGoogle } from "react-icons/fc";
+import { HiOutlineLockClosed } from "react-icons/hi";
 
-export default function App() {
-  const [reportType, setReportType] = useState("number");
-  const [totalViews, setTotalViews] = useState(0);
-  const [value, setValue] = useState("");
-  const [reason, setReason] = useState("");
-  const [search, setSearch] = useState("");
-  const [data, setData] = useState([]);
-  const [showViews, setShowViews] = useState(false);
+export default function ProfileCard({ merchant }) {
+  const { user, loginWithGoogle } = useAuth();
 
-  const submitRef = useRef(null);
-  const searchRef = useRef(null);
-
-  useEffect(() => {
-    const q = query(collection(db, "scammers"), orderBy("createdAt", "desc"));
-    return onSnapshot(q, (s) =>
-      setData(s.docs.map((d) => ({ id: d.id, ...d.data() }))),
-    );
-  }, []);
-
-  useEffect(() => {
-    const countVisit = async () => {
-      const ref = doc(db, "analytics", "global");
-
-      const snap = await getDoc(ref);
-
-      if (snap.exists()) {
-        await updateDoc(ref, {
-          views: increment(1),
-        });
-
-        setTotalViews(snap.data().views + 1);
-      } else {
-        await setDoc(ref, {
-          views: 1,
-        });
-
-        setTotalViews(1);
-      }
-    };
-
-    countVisit();
-  }, []);
-
-  const handleViewClick = () => {
-    setShowViews(true);
-
-    setTimeout(() => {
-      setShowViews(false);
-    }, 3000);
-  };
-
-  const submit = async () => {
-    if (!value || !reason) return toast.error("Fill all fields");
-
-    await addDoc(collection(db, "scammers"), {
-      type: reportType,
-      value,
-      reason,
-      createdAt: serverTimestamp(),
-    });
-
-    setValue("");
-    setReason("");
-    toast.success("Submitted");
-  };
-
-  const scrollToSubmit = () => {
-    submitRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
-
-  const scrollToSearch = () => {
-    searchRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
-
-  const filtered = data.filter((i) =>
-    [i.type, i.value, i.reason].some((v) =>
-      v?.toLowerCase().includes(search.toLowerCase()),
-    ),
-  );
-
-  const stats = [
-    { n: data.length, t: "Total Reports" },
-    { n: filtered.length, t: "Matches Found" },
-    { n: "24/7", t: "Live Search" },
-    { n: "100%", t: "Community Driven" },
-  ];
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8fffb] via-[#eefaf3] to-[#e9f7ef] text-slate-800">
-      <Toaster position="top-right" />
+    <div className="relative w-full min-h-screen bg-[#F5F5F5] font-sans">
+      {/* 🔒 BLUR OVERLAY */}
+      {!user && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-[90%] max-w-sm text-center animate-fadeIn">
+            {/* Title */}
+            <h2 className="text-xl font-semibold mb-2 text-gray-800">
+              Sign in required
+            </h2>
 
-      {/* ✅ APP DOWNLOAD BUTTON (SMALLER + RIGHT SIDE) */}
-      <div className="fixed top-0.5 right-4 z-50">
-        <a
-          href="https://drive.google.com/file/d/1tT9eLOoWFW9UemD65WAgtCKaBddbH742/view?usp=drivesdk"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ textDecoration: "none" }}
-        >
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/20 backdrop-blur-lg border border-white/30 shadow-lg hover:scale-105 transition">
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png"
-              alt="Drive"
-              className="w-6 h-6"
-            />
-            <div className="text-left leading-tight">
-              <p className="text-[10px] text-gray-600">Get The App</p>
-              <p className="text-sm font-semibold text-gray-800">Download</p>
+            {/* Description */}
+            <p className="text-sm text-gray-500 mb-6">
+              Please login to continue using this feature.
+            </p>
+
+            {/* GOOGLE BUTTON */}
+            <button
+              onClick={loginWithGoogle}
+              className="w-full flex items-center justify-center gap-2 border border-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition text-gray-700"
+            >
+              <FcGoogle className="text-lg" />
+              Continue with Google
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MAIN CONTENT */}
+      <div className={!user ? "pointer-events-none select-none" : ""}>
+        {/* HEADER */}
+        <div className="h-24 bg-gradient-to-r from-[#FCD535] to-[#F0B90B]" />
+
+        {/* PROFILE */}
+        <div className="px-3 pb-4 relative bg-white">
+          {/* AVATAR */}
+          <div className="absolute -top-10 left-3 w-20 h-20 rounded-full bg-black text-white flex items-center justify-center text-3xl border-4 border-white">
+            {merchant.merchantName?.charAt(0)}
+          </div>
+
+          {/* FOLLOW BUTTON */}
+          <a
+            href={merchant.merchantLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute top-4 right-3 bg-yellow-400 px-2.5 py-2 rounded-md text-xs font-medium text-black flex items-center gap-1"
+          >
+            <RiUserFollowFill className="text-sm" />
+            Follow
+          </a>
+
+          {/* INFO */}
+          <div className="pt-12">
+            <h2 className="text-xl font-semibold flex items-center gap-1 text-black">
+              {merchant.merchantName}
+              <FcDoughnutChart />
+            </h2>
+
+            <div className="flex items-center gap-2 mt-1 text-[13px] text-gray-600">
+              <span className="flex items-center gap-1">
+                <FcDoughnutChart /> {merchant.badge} Merchant
+              </span>
+              <span className="text-gray-400">|</span>
+              <span>Deposit {merchant.securityDeposit || "2000"} USDT</span>
             </div>
-          </button>
-        </a>
-      </div>
 
-      {/* 👁 VIEW COUNTER (TOP LEFT) */}
-      <div className="absolute top-3 left-4 z-50">
-        <button
-          onClick={handleViewClick}
-          className="flex items-center gap-2 text-[#00bc7d] font-semibold transition hover:scale-105"
-        >
-          {showViews ? (
-            <span className="text-sm bg-white/70 backdrop-blur-md px-3 py-1 rounded-full shadow-md border border-white">
-              Total Visitors: {totalViews}
+            {/* VERIFICATION */}
+            <div className="flex flex-wrap gap-3 mt-2 text-[13px] text-gray-600">
+              {["Email", "SMS", "KYC", "Address"].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-1 text-green-500"
+                >
+                  <IoMdCheckmark />
+                  <span className="text-gray-700">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* STATS */}
+        <div className="mt-2 bg-white px-3 py-3 text-[13px] border-t border-gray-200">
+          <div className="flex justify-between py-1">
+            <span className="text-gray-500">30d Trades</span>
+            <span className="font-semibold text-black">
+              {merchant.trades30d || 0}
             </span>
-          ) : (
-            <BsActivity className="text-2xl drop-shadow-sm" />
-          )}
-        </button>
+          </div>
+
+          <div className="flex justify-between py-1">
+            <span className="text-gray-500">30d Completion Rate</span>
+            <span className="font-semibold text-black">
+              {merchant.completion30d || 0}%
+            </span>
+          </div>
+
+          <div className="flex justify-between py-1">
+            <span className="text-gray-500">Total Orders</span>
+            <span className="font-semibold text-black">
+              {merchant.totalOrders || 0}
+            </span>
+          </div>
+        </div>
+
+        {/* FEEDBACK */}
+        <div className="mt-2 bg-white px-3 py-3 text-[13px] border-t border-gray-200">
+          <div className="flex justify-between py-1">
+            <span className="text-gray-500">Positive Feedback</span>
+            <span className="text-green-600 font-semibold">
+              {merchant.feedbackPositive || 0}
+            </span>
+          </div>
+
+          <div className="flex justify-between py-1">
+            <span className="text-gray-500">Negative Feedback</span>
+            <span className="text-red-500 font-semibold">
+              {merchant.feedbackNegative || 0}
+            </span>
+          </div>
+        </div>
+
+        {/* TRADE SECTION */}
+        <div className="mt-2 bg-white px-3 py-3">
+          {/* PRICE */}
+          <div className="flex justify-between text-[13px] mb-2">
+            <div>
+              <span className="text-gray-500">Buy Price</span>
+              <div className="text-green-600 font-semibold">
+                {merchant.buyRate || "--"}
+              </div>
+            </div>
+
+            <div className="text-right">
+              <span className="text-gray-500">Sell Price</span>
+              <div className="text-red-500 font-semibold">
+                {merchant.sellRate || "--"}
+              </div>
+            </div>
+          </div>
+
+          {/* BUTTONS */}
+          <div className="flex gap-2">
+            <a
+              href={merchant.buyAd}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 bg-green-500 text-white py-1.5 text-xs rounded-md text-center font-medium"
+            >
+              Buy
+            </a>
+
+            <a
+              href={merchant.sellAd}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 bg-red-500 text-white py-1.5 text-xs rounded-md text-center font-medium"
+            >
+              Sell
+            </a>
+          </div>
+
+          {/* LAST UPDATED */}
+          <div className="text-center text-[11px] text-gray-400 mt-2">
+            Last updated: {merchant.lastUpdated || "N/A"}
+          </div>
+        </div>
       </div>
-
-      {/* HERO */}
-      <section className="max-w-6xl mx-auto px-4 py-12 grid md:grid-cols-2 gap-10 items-center">
-        <div>
-          <p className="text-[#00bc7d] font-semibold mb-3 tracking-wide">
-            Community Protection Platform
-          </p>
-
-          <h1 className="text-5xl font-bold leading-tight text-slate-900">
-            Report Scammers{" "}
-            <span className="text-[#00bc7d]">With Confidence</span>
-          </h1>
-
-          <p className="mt-4 text-slate-500 leading-relaxed">
-            Search suspicious numbers, usernames, and bank details. Help others
-            stay safe by submitting reports instantly.
-          </p>
-
-          {/* MOBILE BUTTONS ONLY */}
-          <div className="mt-6 flex gap-3 md:hidden">
-            <button
-              onClick={scrollToSubmit}
-              className="bg-[#00bc7d] text-white px-5 py-3 rounded-xl w-full shadow-lg hover:scale-105 transition"
-            >
-              Submit Report
-            </button>
-
-            <button
-              onClick={scrollToSearch}
-              className="bg-white border border-slate-200 px-5 py-3 rounded-xl w-full shadow-md hover:scale-105 transition"
-            >
-              Search Now
-            </button>
-          </div>
-        </div>
-
-        {/* DESKTOP SUBMIT FORM */}
-        <div
-          ref={submitRef}
-          className="hidden md:block bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white p-6 space-y-4"
-        >
-          <h3 className="font-bold text-xl text-slate-900">
-            Create Scam Report
-          </h3>
-
-          <select
-            value={reportType}
-            onChange={(e) => setReportType(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#00bc7d]"
-          >
-            <option value="number">Phone Number</option>
-            <option value="username">Username</option>
-            <option value="bank">Bank Info</option>
-          </select>
-
-          <input
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder={
-              reportType === "number"
-                ? "Enter Number"
-                : reportType === "username"
-                  ? "Enter Username"
-                  : "Enter Bank"
-            }
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#00bc7d]"
-          />
-
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="Reason"
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 h-28 focus:outline-none focus:ring-2 focus:ring-[#00bc7d]"
-          />
-
-          <button
-            onClick={submit}
-            className="w-full bg-[#00bc7d] text-white py-3 rounded-xl font-semibold shadow-lg hover:scale-[1.02] transition"
-          >
-            Submit Now
-          </button>
-        </div>
-      </section>
-
-      {/* MOBILE SUBMIT FORM */}
-      <section className="px-4 pb-6 md:hidden">
-        <div
-          ref={submitRef}
-          className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white p-6 space-y-4"
-        >
-          <h3 className="font-bold text-xl text-slate-900">
-            Create Scam Report
-          </h3>
-
-          <select
-            value={reportType}
-            onChange={(e) => setReportType(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3"
-          >
-            <option value="number">Phone Number</option>
-            <option value="username">Username</option>
-            <option value="bank">Bank Info</option>
-          </select>
-
-          <input
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder={
-              reportType === "number"
-                ? "Enter Number"
-                : reportType === "username"
-                  ? "Enter Username"
-                  : "Enter Bank"
-            }
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3"
-          />
-
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="Reason"
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 h-28"
-          />
-
-          <button
-            onClick={submit}
-            className="w-full bg-[#00bc7d] text-white py-3 rounded-xl font-semibold shadow-lg"
-          >
-            Submit Now
-          </button>
-        </div>
-      </section>
-
-      {/* STATS */}
-      <section className="py-8">
-        <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          {stats.map((s, i) => (
-            <div
-              key={i}
-              className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-md border border-white"
-            >
-              <div className="text-3xl font-bold text-slate-900">{s.n}</div>
-              <div className="text-sm text-slate-500">{s.t}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* SEARCH */}
-      <section ref={searchRef} className="max-w-6xl mx-auto px-4 py-10">
-        <div className="relative max-w-xl mb-8">
-          <FaSearch className="absolute left-4 top-4 text-slate-400" />
-
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search reports..."
-            className="w-full bg-white rounded-full border border-slate-200 pl-11 pr-4 py-3 shadow-md focus:outline-none focus:ring-2 focus:ring-[#00bc7d]"
-          />
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4">
-          {filtered.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-3xl border border-slate-100 p-5 shadow-md hover:shadow-xl transition"
-            >
-              <div className="font-semibold capitalize text-[#00bc7d]">
-                {item.type}
-              </div>
-
-              <div className="text-lg mt-1 font-semibold text-slate-900">
-                {item.value}
-              </div>
-
-              <div className="text-slate-500 text-sm mt-3 italic border-l-4 border-[#00bc7d] pl-3">
-                {item.reason}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {filtered.length === 0 && (
-          <div className="text-center text-slate-400 py-10">
-            No reports found
-          </div>
-        )}
-      </section>
     </div>
   );
 }
