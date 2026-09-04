@@ -2,16 +2,8 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { FiLock, FiLoader } from "react-icons/fi";
 
-const ADMIN_EMAILS = [
-  "suaibhasan056@gmail.com",
-  "suaibhasan7700gmail.com",
-  "suaibhasan845@gmail.com", 
-  "suaibhasan846@gmail.com", 
-  "suaibhasan042@gmail.com", 
-  "suaibhasan032@gmail.com", 
-  "suaibhasan532@gmail.com", 
-  "suaibhasan033@gmail.com"
-];
+const ADMIN_EMAIL = "suaibhasan056@gmail.com";
+
 export default function AdminRoute({ children }) {
   const { user, loading } = useAuth();
 
